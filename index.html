@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>DRUN VPN</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0b0d14;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+            padding-bottom: 30px;
+        }
+
+        /* Шапка */
+        .top-bar {
+            width: 100%;
+            max-width: 360px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .app-title { font-size: 18px; letter-spacing: 1.5px; font-weight: 800; }
+        .plan-badge {
+            background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15);
+            padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;
+            color: #aaa; cursor: pointer;
+        }
+        .plan-badge.pro { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; border: none; }
+
+        /* Статус */
+        .status-box { text-align: center; margin-top: 10px; }
+        .status-text { font-size: 22px; font-weight: 800; color: #ff4757; transition: color 0.3s; letter-spacing: 0.5px; }
+        .status-text.connected { color: #2ed573; }
+        .ip-card { background: #151824; border: 1px solid #222638; padding: 8px 18px; border-radius: 14px; margin-top: 8px; display: inline-block; }
+        .ip-label { font-size: 11px; color: #5c627a; }
+        .ip-value { font-size: 16px; font-weight: 700; font-family: monospace; margin-top: 2px; color: #ff4757; }
+        .ip-value.connected { color: #8f96ac; }
+        .timer-badge { background: #151824; border: 1px solid #222638; padding: 6px 14px; border-radius: 20px; font-size: 14px; font-family: monospace; color: #2ed573; margin-top: 12px; display: inline-block; visibility: hidden; }
+
+        /* Кнопка Включения */
+        .power-wrapper { margin: 25px 0; display: flex; justify-content: center; align-items: center; width: 100%; }
+        .power-btn {
+            width: 130px; height: 130px; border-radius: 50%; background: #151824;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6); border: 4px solid #ff4757;
+            color: #ff4757; font-size: 44px; cursor: pointer; outline: none;
+            display: flex; align-items: center; justify-content: center; transition: transform 0.1s ease;
+        }
+        .power-btn:active { transform: scale(0.92); }
+        .power-btn.connecting { border-color: #ffa502; color: #ffa502; animation: spin 1s infinite linear; }
+        .power-btn.connected { border-color: #2ed573; color: #2ed573; box-shadow: 0 0 35px rgba(46, 213, 115, 0.35); }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Локация */
+        .location-card {
+            background: #151824; border: 1px solid #222638; width: 100%; max-width: 350px;
+            padding: 12px 16px; border-radius: 16px; display: flex; align-items: center;
+            justify-content: space-between; cursor: pointer; margin-bottom: 15px;
+        }
+        .location-card:active { background: #1c2030; }
+        .location-info { display: flex; align-items: center; gap: 12px; }
+        .flag { font-size: 26px; }
+        .country-name { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+        .city-name { font-size: 12px; color: #5c627a; }
+        .arrow-icon { color: #5c627a; font-size: 16px; }
+
+        /* Статистика */
+        .stats-grid { width: 100%; max-width: 350px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .stat-card { background: #151824; border: 1px solid #222638; padding: 12px; border-radius: 14px; text-align: center; }
+        .stat-val { font-size: 16px; font-weight: 700; margin-top: 4px; }
+        .stat-title { font-size: 11px; color: #5c627a; text-transform: uppercase; }
+
+        /* Лимит */
+        .traffic-card { background: #151824; border: 1px solid #222638; width: 100%; max-width: 350px; padding: 14px; border-radius: 16px; }
+        .traffic-header { display: flex; justify-content: space-between; font-size: 12px; color: #aaa; margin-bottom: 8px; }
+        .progress-bg { background: #222638; height: 8px; border-radius: 4px; overflow: hidden; }
+        .progress-fill { background: linear-gradient(90deg, #007aff, #00d4ff); height: 100%; width: 0%; transition: width 0.3s; }
+
+        /* Модалки */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(5px); display: none; align-items: flex-end; justify-content: center; z-index: 9999;
+        }
+        .modal-sheet {
+            background: #151824; border: 1px solid #222638; width: 100%; max-width: 450px;
+            border-radius: 24px 24px 0 0; padding: 20px; max-height: 80vh; display: flex;
+            flex-direction: column; animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .modal-title { font-size: 18px; font-weight: 700; }
+        .close-btn { background: #222638; border: none; color: #aaa; width: 34px; height: 34px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .country-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; }
+        .country-item { display: flex; align-items: center; justify-content: space-between; background: #0b0d14; border: 1px solid #222638; padding: 12px 15px; border-radius: 14px; cursor: pointer; }
+        .country-item.active { border-color: #007aff; background: #101526; }
+        .lock-badge { background: #222638; color: #ffd700; padding: 4px 8px; border-radius: 8px; font-size: 11px; font-weight: bold; }
+        .buy-btn { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #000; border: none; width: 100%; padding: 16px; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; margin-top: 15px; }
+    </style>
+</head>
+<body>
+
+    <!-- Главный контент -->
+    <div class="main-content">
+        <div class="top-bar">
+            <div class="app-title">DRUN VPN</div>
+            <div class="plan-badge" id="plan-badge-btn">FREE</div>
+        </div>
+
+        <div class="status-box">
+            <div class="status-text" id="status-text">НЕ ПОДКЛЮЧЕНО</div>
+            <div class="ip-card">
+                <div class="ip-label">Ваш IP-адрес</div>
+                <div class="ip-value" id="ip-address">195.82.14.102</div>
+            </div>
+            <br>
+            <div class="timer-badge" id="timer-badge">⏱️ 00:00:00</div>
+        </div>
+
+        <div class="power-wrapper">
+            <button class="power-btn" id="power-btn-main">⏻</button>
+        </div>
+
+        <div class="location-card" id="location-card-btn">
+            <div class="location-info">
+                <span class="flag" id="flag-icon">🇳🇱</span>
+                <div>
+                    <div class="country-name" id="country-name">Нидерланды</div>
+                    <div class="city-name" id="city-name">Амстердам</div>
+                </div>
+            </div>
+            <span class="arrow-icon">❯</span>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-title">📥 Скачано</div>
+                <div class="stat-val" id="down-speed" style="color: #00d4ff;">0.0 MB</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-title">📤 Отправлено</div>
+                <div class="stat-val" id="up-speed" style="color: #ff007f;">0.0 MB</div>
+            </div>
+        </div>
+
+        <div class="traffic-card">
+            <div class="traffic-header">
+                <span>Лимит трафика</span>
+                <span id="traffic-text" style="color: #fff; font-weight: 600;">0 / 5.0 GB</span>
+            </div>
+            <div class="progress-bg">
+                <div class="progress-fill" id="traffic-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модалка серверов -->
+    <div class="modal-overlay" id="server-modal">
+        <div class="modal-sheet" id="server-sheet">
+            <div class="modal-header">
+                <div class="modal-title">Выберите сервер</div>
+                <button class="close-btn" id="close-server-btn">✕</button>
+            </div>
+            <div class="country-list" id="country-list"></div>
+        </div>
+    </div>
+
+    <!-- Модалка Премиума -->
+    <div class="modal-overlay" id="premium-modal">
+        <div class="modal-sheet" id="premium-sheet">
+            <div class="modal-header">
+                <div class="modal-title">DRUN VPN PREMIUM</div>
+                <button class="close-btn" id="close-premium-btn">✕</button>
+            </div>
+            <div style="text-align: center; padding: 10px 0;">
+                <div style="font-size: 55px; margin-bottom: 10px;">👑</div>
+                <p style="font-size: 14px; color: #aaa; margin: 0 0 20px 0; line-height: 1.4;">
+                    Снимите ограничение в 5GB и получите доступ ко всем самым быстрым серверам!
+                </p>
+                <div style="text-align: left; font-size: 14px; color: #ddd; display: flex; flex-direction: column; gap: 12px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 12px;">
+                    <div>⚡ <b>Безлимитный трафик</b></div>
+                    <div>🌍 <b>Все страны и локации</b></div>
+                    <div>🚀 <b>Максимальная скорость</b></div>
+                </div>
+                <button class="buy-btn" id="activate-premium-btn">Активировать PREMIUM</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Изолируем весь код, чтобы ничего не ломалось
+        (function() {
+            console.log("DRUN VPN скрипт загружен!");
+
+            const realIP = "195.82.14.102";
+            let isConnected = false;
+            let isConnecting = false;
+            let isPremium = false;
+
+            const maxFreeMB = 5000;
+            let downloadedMB = 0;
+            let uploadedMB = 0;
+            let usedMB = 0;
+
+            const servers = [
+                { id: 'nl', flag: '🇳🇱', country: 'Нидерланды', city: 'Амстердам', ip: '185.220.101.5', free: true },
+                { id: 'us', flag: '🇺🇸', country: 'США', city: 'Нью-Йорк', ip: '104.244.76.13', free: false },
+                { id: 'de', flag: '🇩🇪', country: 'Германия', city: 'Франкфурт', ip: '194.26.29.80', free: false },
+                { id: 'jp', flag: '🇯🇵', country: 'Япония', city: 'Токио', ip: '45.14.224.15', free: false },
+                { id: 'gb', flag: '🇬🇧', country: 'Великобритания', city: 'Лондон', ip: '89.238.130.22', free: false }
+            ];
+
+            let selectedServer = servers[0];
+            let secondsConnected = 0;
+            let trafficInterval = null;
+            let timerInterval = null;
+
+            // Находим все элементы
+            const els = {
+                planBadge: document.getElementById('plan-badge-btn'),
+                powerBtn: document.getElementById('power-btn-main'),
+                locationCard: document.getElementById('location-card-btn'),
+                serverModal: document.getElementById('server-modal'),
+                premiumModal: document.getElementById('premium-modal'),
+                closeServerBtn: document.getElementById('close-server-btn'),
+                closePremiumBtn: document.getElementById('close-premium-btn'),
+                activatePremiumBtn: document.getElementById('activate-premium-btn'),
+                countryList: document.getElementById('country-list'),
+                statusText: document.getElementById('status-text'),
+                ipAddress: document.getElementById('ip-address'),
+                timerBadge: document.getElementById('timer-badge'),
+                downSpeed: document.getElementById('down-speed'),
+                upSpeed: document.getElementById('up-speed'),
+                trafficText: document.getElementById('traffic-text'),
+                trafficBar: document.getElementById('traffic-bar')
+            };
+
+            // Привязка событий (работает во всех браузерах)
+            els.planBadge.addEventListener('click', openPremium);
+            els.locationCard.addEventListener('click', openServers);
+            els.closeServerBtn.addEventListener('click', closeServers);
+            els.closePremiumBtn.addEventListener('click', closePremium);
+            els.activatePremiumBtn.addEventListener('click', activatePremium);
+            els.powerBtn.addEventListener('click', toggleVPN);
+
+            // Закрытие при клике на фон
+            els.serverModal.addEventListener('click', function(e) { if(e.target === els.serverModal) closeServers(); });
+            els.premiumModal.addEventListener('click', function(e) { if(e.target === els.premiumModal) closePremium(); });
+
+            function openPremium() {
+                if (!isPremium) els.premiumModal.style.display = 'flex';
+            }
+            function closePremium() { els.premiumModal.style.display = 'none'; }
+            function openServers() {
+                renderServers();
+                els.serverModal.style.display = 'flex';
+            }
+            function closeServers() { els.serverModal.style.display = 'none'; }
+
+            function renderServers() {
+                els.countryList.innerHTML = '';
+                servers.forEach(s => {
+                    const item = document.createElement('div');
+                    item.className = `country-item ${s.id === selectedServer.id ? 'active' : ''}`;
+                    
+                    let rightHtml = (!s.free && !isPremium) 
+                        ? `<span class="lock-badge">🔒 PRO</span>` 
+                        : `<span style="color: #007aff; font-weight: bold; font-size: 16px;">✓</span>`;
+
+                    item.innerHTML = `
+                        <div class="location-info">
+                            <span class="flag">${s.flag}</span>
+                            <div>
+                                <div class="country-name">${s.country}</div>
+                                <div class="city-name">${s.city}</div>
+                            </div>
+                        </div>
+                        ${rightHtml}
+                    `;
+
+                    item.addEventListener('click', function() {
+                        if (!s.free && !isPremium) {
+                            closeServers();
+                            openPremium();
+                            return;
+                        }
+                        selectedServer = s;
+                        document.getElementById('flag-icon').innerText = s.flag;
+                        document.getElementById('country-name').innerText = s.country;
+                        document.getElementById('city-name').innerText = s.city;
+                        if (isConnected) els.ipAddress.innerText = s.ip;
+                        closeServers();
+                    });
+
+                    els.countryList.appendChild(item);
+                });
+            }
+
+            function activatePremium() {
+                isPremium = true;
+                els.planBadge.innerText = "PRO";
+                els.planBadge.classList.add('pro');
+                updateTrafficUI();
+                closePremium();
+                alert("DRUN VPN PREMIUM активирован!");
+            }
+
+            function toggleVPN() {
+                console.log("Кнопка включения нажата!");
+                if (isConnecting) return;
+
+                if (!isConnected) {
+                    if (!isPremium && usedMB >= maxFreeMB) {
+                        alert("Лимит 5 ГБ исчерпан! Подключите Premium.");
+                        openPremium();
+                        return;
+                    }
+
+                    isConnecting = true;
+                    els.powerBtn.classList.add('connecting');
+                    els.statusText.innerText = "ПОДКЛЮЧЕНИЕ...";
+                    els.statusText.style.color = "#ffa502";
+
+                    setTimeout(() => {
+                        isConnecting = false;
+                        isConnected = true;
+                        
+                        els.powerBtn.classList.remove('connecting');
+                        els.powerBtn.classList.add('connected');
+                        
+                        els.statusText.innerText = "ПОДКЛЮЧЕНО";
+                        els.statusText.style.color = "#2ed573";
+                        els.ipAddress.innerText = selectedServer.ip;
+                        els.ipAddress.style.color = "#8f96ac";
+                        els.timerBadge.style.visibility = 'visible';
+                        
+                        startStats();
+                    }, 1500);
+                } else {
+                    isConnected = false;
+                    els.powerBtn.classList.remove('connected');
+                    els.statusText.innerText = "НЕ ПОДКЛЮЧЕНО";
+                    els.statusText.style.color = "#ff4757";
+                    els.ipAddress.innerText = realIP;
+                    els.ipAddress.style.color = "#ff4757";
+                    els.timerBadge.style.visibility = 'hidden';
+                    
+                    stopStats();
+                }
+            }
+
+            function startStats() {
+                trafficInterval = setInterval(() => {
+                    if (!isConnected) return;
+                    const addDown = parseFloat((Math.random() * 2.2).toFixed(1));
+                    const addUp = parseFloat((Math.random() * 0.6).toFixed(1));
+                    downloadedMB += addDown;
+                    uploadedMB += addUp;
+                    usedMB += (addDown + addUp);
+
+                    els.downSpeed.innerText = downloadedMB.toFixed(1) + " MB";
+                    els.upSpeed.innerText = uploadedMB.toFixed(1) + " MB";
+                    updateTrafficUI();
+
+                    if (!isPremium && usedMB >= maxFreeMB) {
+                        usedMB = maxFreeMB;
+                        updateTrafficUI();
+                        toggleVPN(); // Выключаем
+                        setTimeout(() => { openPremium(); }, 500);
+                    }
+                }, 1000);
+
+                timerInterval = setInterval(() => {
+                    if (!isConnected) return;
+                    secondsConnected++;
+                    const hrs = String(Math.floor(secondsConnected / 3600)).padStart(2, '0');
+                    const mins = String(Math.floor((secondsConnected % 3600) / 60)).padStart(2, '0');
+                    const secs = String(secondsConnected % 60).padStart(2, '0');
+                    els.timerBadge.innerText = `⏱️ ${hrs}:${mins}:${secs}`;
+                }, 1000);
+            }
+
+            function stopStats() {
+                clearInterval(trafficInterval);
+                clearInterval(timerInterval);
+                secondsConnected = 0;
+                els.timerBadge.innerText = "⏱️ 00:00:00";
+            }
+
+            function updateTrafficUI() {
+                if (isPremium) {
+                    els.trafficText.innerText = `${(usedMB / 1024).toFixed(2)} GB / Безлимит ♾️`;
+                    els.trafficBar.style.width = "100%";
+                } else {
+                    els.trafficText.innerText = `${(usedMB / 1024).toFixed(2)} / 5.0 GB`;
+                    const percent = Math.min(100, (usedMB / maxFreeMB) * 100);
+                    els.
