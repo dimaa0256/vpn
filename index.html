@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>DRUN VPN</title>
+    <link rel="manifest" href="manifest.json">
     <style>
         * {
             box-sizing: border-box;
@@ -28,7 +29,6 @@
             text-align: center;
             width: 100%;
         }
-        /* Выразительный заголовок DRUN VPN */
         .app-title {
             font-size: 22px;
             letter-spacing: 3px;
@@ -47,7 +47,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* Время сессии */
         .timer {
             font-size: 12px;
             color: #2ed573;
@@ -61,7 +60,6 @@
             display: inline-block;
         }
 
-        /* Кнопка включения */
         .power-wrapper {
             display: flex;
             justify-content: center;
@@ -107,7 +105,6 @@
             100% { transform: rotate(360deg); }
         }
 
-        /* Карточка IP (перенесена под кнопку) */
         .ip-card {
             background: #161824;
             border: 1px solid #23273a;
@@ -134,7 +131,6 @@
             color: #9aa0b4;
         }
 
-        /* Карточка выбора локации */
         .location-card {
             background: #161824;
             border: 1px solid #23273a;
@@ -174,7 +170,6 @@
             font-weight: bold;
         }
 
-        /* Статистика трафика (плотно подтянута к выбору локации) */
         .stats-grid {
             width: 100%;
             max-width: 350px;
@@ -199,7 +194,6 @@
             color: #5c627a;
         }
 
-        /* Модальное окно */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -310,20 +304,17 @@
         <div class="timer" id="timer">Время сессии: 00:00:00</div>
     </div>
 
-    <!-- Кнопка включения с персонажем -->
     <div class="power-wrapper">
         <button class="power-btn" id="power-btn">
             <img src="character.png" alt="Drun Character">
         </button>
     </div>
 
-    <!-- IP-адрес расположен под кнопкой включения -->
     <div class="ip-card">
         <div class="ip-label">Ваш IP-адрес</div>
         <div class="ip-value disconnected" id="ip-address">195.82.14.102</div>
     </div>
 
-    <!-- Выбор локации -->
     <div class="location-card" id="location-card">
         <div class="location-info">
             <span class="flag" id="flag-icon">🇳🇱</span>
@@ -335,7 +326,6 @@
         <span class="arrow-icon">❯</span>
     </div>
 
-    <!-- Статистика трафика -->
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-title">📥 Скачано</div>
@@ -347,16 +337,13 @@
         </div>
     </div>
 
-    <!-- Модальное окно выбора стран -->
     <div class="modal-overlay" id="modal-overlay">
         <div class="modal-sheet">
             <div class="modal-header">
                 <div class="modal-title">Выберите сервер</div>
                 <button class="close-btn" id="close-modal">✕</button>
             </div>
-            <div class="country-list" id="country-list">
-                <!-- Отрисовывается из JS -->
-            </div>
+            <div class="country-list" id="country-list"></div>
         </div>
     </div>
 
@@ -374,7 +361,6 @@
         ];
 
         let selectedServer = servers[0];
-
         let downloaded = 0;
         let uploaded = 0;
         let secondsConnected = 0;

@@ -1,0 +1,20 @@
+{
+  "name": "DRUN VPN",
+  "short_name": "DRUN VPN",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0f17",
+  "theme_color": "#0d0f17",
+  "icons": [
+    {
+      "src": "character.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "character.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
