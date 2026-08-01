@@ -482,7 +482,7 @@
                 const hrs = String(Math.floor(secondsConnected / 3600)).padStart(2, '0');
                 const mins = String(Math.floor((secondsConnected % 3600) / 60)).padStart(2, '0');
                 const secs = String(secondsConnected % 60).padStart(2, '0');
-                timerEl.innerText = `Время сессии: ${hrs}:${mins}:${secs}`;
+                timerEl.innerText = `Время: ${hrs}:${mins}:${secs}`;
             }, 1000);
         }
 
